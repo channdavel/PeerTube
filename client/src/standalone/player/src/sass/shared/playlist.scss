@@ -3,6 +3,7 @@
 @use "./_player-variables" as *;
 
 $playlist-menu-width: 350px;
+$transcript-menu-width: 300px;
 
 .vjs-playlist-menu {
   position: absolute;
@@ -58,6 +59,100 @@ $playlist-menu-width: 350px;
   }
 }
 
+// Transcript: same hide/show pattern as playlist (off-screen right when closed)
+.vjs-transcript {
+  overflow: hidden;
+}
+
+.vjs-transcript-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: $transcript-menu-width;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 101;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s ease;
+  line-height: normal;
+
+  // Hidden off-screen to the right (match playlist pattern)
+  right: -$transcript-menu-width;
+
+  .vjs-transcript-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+  }
+
+  .vjs-transcript-title {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .vjs-transcript-close {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+
+    &:hover {
+      color: #fff;
+    }
+  }
+
+  .vjs-transcript-segments {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 0;
+  }
+
+  .vjs-transcript-segment {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    &.vjs-active {
+      background: rgba(255, 255, 255, 0.2);
+      font-weight: 600;
+    }
+  }
+
+  .vjs-transcript-time {
+    min-width: 56px;
+    color: #aaa;
+    font-size: 12px;
+    font-family: monospace;
+  }
+
+  .vjs-transcript-text {
+    font-size: 14px;
+    line-height: 1.4;
+    color: #fff;
+  }
+}
+
+// Transcript button in control bar (icon only, same pattern as other buttons)
+.vjs-transcript-button .vjs-icon-placeholder {
+  font-size: 1.4em;
+  line-height: 1;
+}
+
 .playlist-menu-displayed {
   .vjs-playlist-menu {
     right: 0;
@@ -66,6 +161,17 @@ $playlist-menu-width: 350px;
 
   .vjs-playlist-button {
     display: none;
+  }
+}
+
+.transcript-menu-displayed {
+  .vjs-transcript-menu {
+    right: 0;
+  }
+
+  .video-js video,
+  .video-js .vjs-tech {
+    width: calc(100% - $transcript-menu-width);
   }
 }
 

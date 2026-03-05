@@ -147,6 +147,7 @@ export class ShareVideoComponent implements OnInit {
         warningTitle: customizations.warningTitle,
         controlBar: customizations.controlBar,
         peertubeLink: customizations.peertubeLink,
+        transcript: customizations.transcript,
 
         p2p: customizations.embedP2P === this.server.getHTMLConfig().defaults.p2p.embed.enabled
           ? undefined

@@ -32,6 +32,7 @@ import './shared/p2p-media-loader/p2p-media-loader-plugin'
 import './shared/peertube/peertube-plugin'
 import { ControlBarOptionsBuilder, HLSOptionsBuilder, WebVideoOptionsBuilder } from './shared/player-options-builder'
 import './shared/playlist/playlist-plugin'
+import './shared/transcript'
 import './shared/resolutions/peertube-resolutions-plugin'
 import './shared/settings/menu-focus-fixed'
 import './shared/settings/resolution-menu-button'
@@ -312,6 +313,10 @@ export class PeerTubePlayer {
 
     if (this.currentLoadOptions.playlist) {
       this.player.playlist(this.currentLoadOptions.playlist)
+    }
+
+    if (this.currentLoadOptions.transcript) {
+      ;(this.player as any).transcript(this.currentLoadOptions.transcript)
     }
 
     if (this.currentLoadOptions.upnext) {

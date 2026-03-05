@@ -20,6 +20,7 @@ export type Customizations = {
   controlBar: boolean
   peertubeLink: boolean
   responsive: boolean
+  transcript: boolean
 
   includeVideoInPlaylist: boolean
 }

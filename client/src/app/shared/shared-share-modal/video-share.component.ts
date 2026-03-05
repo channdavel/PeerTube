@@ -64,6 +64,7 @@ export class VideoShareComponent {
       controlBar: true,
       peertubeLink: true,
       responsive: false,
+      transcript: false,
 
       includeVideoInPlaylist: false
     }, {

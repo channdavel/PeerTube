@@ -103,6 +103,7 @@ function decorateVideoLink (options: {
   p2p?: boolean
 
   api?: boolean
+  transcript?: boolean
 
   version?: number
 }) {
@@ -135,6 +136,7 @@ function decorateVideoLink (options: {
   if (options.p2p !== undefined) params.set('p2p', options.p2p ? '1' : '0')
 
   if (options.api !== undefined) params.set('api', options.api ? '1' : '0')
+  if (options.transcript === true) params.set('transcript', '1')
 
   if (options.version !== undefined) params.set('v', options.version + '')
 

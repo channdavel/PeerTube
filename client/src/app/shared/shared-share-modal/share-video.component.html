@@ -148,6 +148,17 @@
           labelText="Responsive embed"
         ></my-peertube-checkbox>
       </div>
+
+      @if (videoCaptions().length !== 0) {
+        <div class="form-group">
+          <my-peertube-checkbox
+            inputName="transcript"
+            [(ngModel)]="customizations().transcript"
+            i18n-labelText
+            labelText="Include transcript"
+          ></my-peertube-checkbox>
+        </div>
+      }
     }
 
     <my-plugin-placeholder pluginId="share-modal-video-settings"></my-plugin-placeholder>

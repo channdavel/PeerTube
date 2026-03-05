@@ -28,6 +28,8 @@ import {
   getBackendUrl
 } from './shared'
 import { PlayerHTML } from './shared/player-html'
+import { parse } from '@plussub/srt-vtt-parser'
+import { TranscriptPluginOptions } from '../player/src/shared/transcript/transcript-plugin-options'
 
 export class PeerTubeEmbed {
   player: VideojsPlayer
@@ -308,6 +310,8 @@ export class PeerTubeEmbed {
       }
       : undefined
 
+    const transcript = await this.buildTranscriptOptions(captionsResponse.clone())
+
     const loadOptions = await this.playerOptionsBuilder.getPlayerLoadOptions({
       video,
       captionsResponse,
@@ -329,6 +333,11 @@ export class PeerTubeEmbed {
       forceAutoplay,
       alreadyPlayed: this.alreadyPlayed
     })
+
+    if (transcript) {
+      loadOptions.transcript = transcript
+    }
+
     await this.peertubePlayer.load(loadOptions)
 
     if (!this.alreadyInitialized) {
@@ -420,6 +429,59 @@ export class PeerTubeEmbed {
     this.peertubePlayer.setPoster(video.thumbnails)
   }
 
+  private async buildTranscriptOptions (captionsResponse: Response): Promise<TranscriptPluginOptions | undefined> {
+    try {
+      const params = new URL(window.location.toString()).searchParams
+      const transcriptEnabled = params.get('transcript') === '1'
+      if (!transcriptEnabled) return undefined
+
+      if (!captionsResponse.ok) return undefined
+
+      const json = await captionsResponse.json() as { data: Array<{ fileUrl: string, language?: { id?: string } }> }
+      const captions = json?.data || []
+      if (captions.length === 0) return undefined
+
+      const caption = captions[0]
+      if (!caption.fileUrl) return undefined
+
+      const res = await fetch(caption.fileUrl)
+      if (!res.ok) return undefined
+
+      const content = await res.text()
+      const entries = parse(content).entries
+
+      const segments = entries.map(({ from, text }) => {
+        const start = Math.round(from / 1000)
+
+        return {
+          start,
+          startFormatted: durationToString(start),
+          text
+        }
+      })
+
+      if (segments.length === 0) return undefined
+
+      const transcriptOptions: TranscriptPluginOptions = {
+        segments,
+        currentTime: () => {
+          if (!this.player) return 0
+          return this.player.currentTime()
+        },
+        onSegmentClicked: (t: number) => {
+          if (!this.player) return
+          this.player.currentTime(t)
+        },
+        videoLanguage: caption.language?.id
+      }
+
+      return transcriptOptions
+    } catch (err) {
+      logger.error('Cannot build transcript options for embed.', err)
+      return undefined
+    }
+  }
+
   private async handlePasswordError (err: PeerTubeServerError) {
     let incorrectPassword: boolean = null
     if (err.serverCode === ServerErrorCode.VIDEO_REQUIRES_PASSWORD) incorrectPassword = false
@@ -504,6 +566,20 @@ export class PeerTubeEmbed {
 
     return canvas.toDataURL('image/jpeg')
   }
+}
+
+function durationToString (duration: number) {
+  const hours = Math.floor(duration / 3600)
+  const minutes = Math.floor((duration % 3600) / 60)
+  const seconds = duration % 60
+
+  const minutesPadding = minutes >= 10 ? '' : '0'
+  const secondsPadding = seconds >= 10 ? '' : '0'
+  const displayedHours = hours > 0 ? hours.toString() + ':' : ''
+
+  return (
+    displayedHours + minutesPadding + minutes.toString() + ':' + secondsPadding + seconds.toString()
+  ).replace(/^0/, '')
 }
 
 PeerTubeEmbed.main()
