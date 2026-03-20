@@ -23,7 +23,7 @@ import { VideoLiveScheduleModel } from '@server/models/video/video-live-schedule
 import { VideoLiveModel } from '@server/models/video/video-live.js'
 import { VideoPasswordModel } from '@server/models/video/video-password.js'
 import { VideoModel } from '@server/models/video/video.js'
-import { MChannel, MChannelAccountLight, MUserAccountId, MVideoFile, MVideoFullLight } from '@server/types/models/index.js'
+import { MChannel, MChannelAccountLight, MUserAccountId, MVideoFile, MVideoFull } from '@server/types/models/index.js'
 import { FilteredModelAttributes } from '@server/types/sequelize.js'
 import { FfprobeData } from 'fluent-ffmpeg'
 import { move } from 'fs-extra/esm'
@@ -49,9 +49,19 @@ type VideoAttributes = Omit<VideoCreate, 'channelId'> & {
   embedPrivacyPolicy?: VideoEmbedPrivacyPolicyType
 }
 
-type LiveAttributes = Pick<LiveVideoCreate, 'permanentLive' | 'latencyMode' | 'saveReplay' | 'replaySettings' | 'schedules'> & {
-  streamKey?: string
-}
+type LiveAttributes =
+  & Pick<
+    LiveVideoCreate,
+    | 'permanentLive'
+    | 'latencyMode'
+    | 'dvrWindow'
+    | 'saveReplay'
+    | 'replaySettings'
+    | 'schedules'
+  >
+  & {
+    streamKey?: string
+  }
 
 export type ThumbnailOption = {
   path: string
@@ -78,7 +88,7 @@ export class LocalVideoCreator {
   private readonly channel: MChannelAccountLight
   private readonly videoAttributeResultHook: VideoAttributeHookFilter
 
-  private video: MVideoFullLight
+  private video: MVideoFull
   private videoFile: MVideoFile
   private videoPath: string
 
@@ -122,7 +132,7 @@ export class LocalVideoCreator {
   async create () {
     this.video = new VideoModel(
       await Hooks.wrapObject(this.buildVideo(this.videoAttributes, this.channel), this.videoAttributeResultHook)
-    ) as MVideoFullLight
+    ) as MVideoFull
 
     this.video.VideoChannel = this.channel
     this.video.url = getLocalVideoActivityPubUrl(this.video)
@@ -199,6 +209,7 @@ export class LocalVideoCreator {
             saveReplay: this.liveAttributes.saveReplay || false,
             permanentLive: this.liveAttributes.permanentLive || false,
             latencyMode: this.liveAttributes.latencyMode || LiveVideoLatencyMode.DEFAULT,
+            dvrWindow: this.liveAttributes.dvrWindow ?? CONFIG.LIVE.DVR.MAX_WINDOW,
             streamKey: this.liveAttributes.streamKey || buildUUID()
           })
 

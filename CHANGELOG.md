@@ -1,6 +1,49 @@
 # Changelog
 
-## v8.1.0-rc.1
+## v8.1.3
+
+### IMPORTANT NOTES
+
+ * Follow v8.1.0 IMPORTANT NOTES if you upgrade from PeerTube <= v8.0.2
+
+### SECURITY
+
+ * Updates vulnerable dependencies
+
+### Bug fixes
+
+ * Fix error 500 in home page if there are many channels
+ * Prevent 500 error for podcast feed
+ * Re-fetch remote videos if the thumbnail if not found
+ * Handle non jpg remote thumbnails
+
+
+## v8.1.2
+
+### IMPORTANT NOTES
+
+ * Follow v8.1.0 IMPORTANT NOTES if you upgrade from PeerTube <= v8.0.2
+
+### Bug fixes
+
+ * Fix broken thumbnails on account page
+ * Fix broken initial channel import
+ * Fix broken root password generation
+
+
+## v8.1.1
+
+### IMPORTANT NOTES
+
+ * Follow v8.1.0 IMPORTANT NOTES if you upgrade from PeerTube <= v8.0.2
+
+### Bug fixes
+
+ * Fix bad URL for objects stored in object storage
+ * Fix broken actor avatar in "Discover" page
+
+
+## v8.1.0
 
 ### IMPORTANT NOTES
 
@@ -8,11 +51,13 @@
     * Classic installation: `cd /var/www/peertube/peertube-latest && sudo -u peertube NODE_CONFIG_DIR=/var/www/peertube/config NODE_ENV=production node dist/scripts/migrations/peertube-8.1.js`
     * Docker installation: `cd /var/www/peertube-docker && docker compose exec -u peertube peertube node dist/scripts/migrations/peertube-8.1.js`
   * Running [regenerate-thumbnails](https://docs.joinpeertube.org/maintain/tools#regenerate-video-thumbnails) and [prune-storage](https://docs.joinpeertube.org/maintain/tools#prune-filesystem-object-storage) scripts after the upgrade and migration script is highly recommended
+  * If you run PostgreSQL or Redis with TLS connection and self signed certificates, you must explicitly set `reject_unauthorized` to `true` or fill `ca`, `cert` and `key` settings in your [production.yaml](https://github.com/Chocobozzz/PeerTube/blob/develop/config/production.yaml.example#L84)
 
 ### Maintenance
 
-  * Migrate to the `sharp` NodeJS dependency to process images. This is a native dependency that provides prebuilt binaries, but some systems (like FreeBSD) may require an additional step after PeerTube dependencies installation:
-    * Install `sharp` dependencies: https://sharp.pixelplumbing.com/install/#building-from-source
+  * Migrate to the `sharp` NodeJS dependency to process images. This is a native dependency that provides prebuilt binaries for most system.
+  FreeBSD systems, however, require an additional step after PeerTube dependencies installation:
+    * Install `sharp` build dependencies: https://sharp.pixelplumbing.com/install/#building-from-source
     * Run `npm explore sharp -- npm run build` in `peertube-latest` directory
   * Merge the `previews` directory into the `thumbnails` directory. The migration script will automatically move files
     The `previews` directory and configuration are kept for compatibility reasons
@@ -86,6 +131,7 @@
     * Optimize videos list SQL query with complex sort (trending, hot, etc.)
     * When possible, send raw files directly instead of muxing when downloading a video
   * Improve podcast feed images compatibility with Apple Podcast
+  * Add ability to set the default "download enabled" policy in admin configuration
 
 ### Bug fixes
 
@@ -112,6 +158,8 @@
   * Fix `.mkv` video file upload on latest Chrome
   * Fix deleting all instance logo when deleting a specific logo
   * Fix getting unsupported Node.js from PATH with yt-dlp [#7468](https://github.com/Chocobozzz/PeerTube/pull/7468)
+  * Inherit border color from primary color
+  * Fix PeerTube client that automatically updates interface language to English
 
 
 

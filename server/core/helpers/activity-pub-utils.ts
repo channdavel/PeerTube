@@ -97,6 +97,10 @@ const contextStore: { [id in ContextType]: (string | { [id: string]: string })[]
       '@type': 'sc:Number',
       '@id': 'pt:latencyMode'
     },
+    dvrWindow: {
+      '@type': 'sc:Duration',
+      '@id': 'pt:dvrWindow'
+    },
 
     Infohash: 'pt:Infohash',
 
@@ -139,6 +143,10 @@ const contextStore: { [id in ContextType]: (string | { [id: string]: string })[]
     views: {
       '@type': 'sc:Number',
       '@id': 'pt:views'
+    },
+    downloads: {
+      '@type': 'sc:Number',
+      '@id': 'pt:downloads'
     },
     state: {
       '@type': 'sc:Number',
@@ -313,6 +321,13 @@ const contextStore: { [id in ContextType]: (string | { [id: string]: string })[]
     },
 
     theme: 'pt:theme'
+  }),
+
+  Download: buildContext({
+    DownloadAction: 'sc:DownloadAction',
+    InteractionCounter: 'sc:InteractionCounter',
+    interactionType: 'sc:interactionType',
+    userInteractionCount: 'sc:userInteractionCount'
   })
 }
 

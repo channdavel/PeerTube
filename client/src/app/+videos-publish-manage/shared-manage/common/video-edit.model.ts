@@ -27,11 +27,11 @@ import {
   VideoUpdate
 } from '@peertube/peertube-models'
 import { logger } from '@root-helpers/logger'
+import { splitAndGetNotEmpty } from '@root-helpers/string'
 import debug from 'debug'
 import { Jsonify, SharedUnionFieldsDeep } from 'type-fest'
 import { VideoCaptionWithPathEdit } from './video-caption-edit.model'
 import { VideoChaptersEdit } from './video-chapters-edit.model'
-import { splitAndGetNotEmpty } from '@root-helpers/string'
 
 const debugLogger = debug('peertube:video-manage:video-edit')
 
@@ -52,9 +52,14 @@ type CommonUpdateForm =
     nsfwFlagSex?: boolean
   }
 
-type LiveUpdateForm = Omit<LiveVideoUpdate, 'replaySettings' | 'schedules'> & {
+type LiveUpdateForm = Omit<LiveVideoUpdate, 'replaySettings' | 'schedules' | 'dvrWindow'> & {
   replayPrivacy?: VideoPrivacyType
+
+  dvrEnabled?: boolean
+  dvrWindowMinutes?: number
+
   liveStreamKey?: string
+
   schedules?: {
     startAt?: Date
   }[]
@@ -90,7 +95,12 @@ type CreateFromImportOptions = LoadFromPublishOptions & Pick<VideoImportCreate, 
 
 type CreateFromLiveOptions =
   & CreateFromUploadOptions
-  & Required<Pick<LiveVideoCreate, 'permanentLive' | 'latencyMode' | 'saveReplay' | 'replaySettings' | 'schedules'>>
+  & Required<
+    Pick<
+      LiveVideoCreate,
+      'permanentLive' | 'latencyMode' | 'dvrWindow' | 'saveReplay' | 'replaySettings' | 'schedules'
+    >
+  >
 
 type UpdateFromAPIOptions = {
   video?: Pick<
@@ -120,6 +130,7 @@ type UpdateFromAPIOptions = {
     | 'likes'
     | 'aspectRatio'
     | 'views'
+    | 'downloads'
     | 'blacklisted'
     | 'blacklistedReason'
     | 'thumbnails'
@@ -173,6 +184,7 @@ export class VideoEdit {
     state: VideoStateType
     isLive: boolean
     views: number
+    downloads: number
     aspectRatio: number
     duration: number
     likes: number
@@ -197,6 +209,7 @@ export class VideoEdit {
     aspectRatio: number
     duration: number
     views: number
+    downloads: number
     likes: number
 
     blacklisted: boolean
@@ -275,6 +288,8 @@ export class VideoEdit {
       latencyMode: options.latencyMode,
       permanentLive: options.permanentLive,
 
+      dvrWindow: options.dvrWindow,
+
       saveReplay: options.saveReplay,
 
       replaySettings: options.replaySettings
@@ -310,6 +325,7 @@ export class VideoEdit {
     this.common.pluginData = {}
 
     this.metadata.views = 0
+    this.metadata.downloads = 0
     this.metadata.likes = 0
 
     this.metadata.ownerAccountDisplayName = options.user.account.displayName
@@ -429,6 +445,7 @@ export class VideoEdit {
     this.metadata.state = video.state.id
     this.metadata.duration = video.duration
     this.metadata.views = video.views
+    this.metadata.downloads = video.downloads
     this.metadata.likes = video.likes
     this.metadata.aspectRatio = video.aspectRatio
     this.metadata.blacklisted = video.blacklisted
@@ -473,6 +490,7 @@ export class VideoEdit {
       return {
         permanentLive: live.permanentLive,
         latencyMode: live.latencyMode,
+        dvrWindow: live.dvrWindow,
         saveReplay: live.saveReplay,
 
         replaySettings: live.replaySettings
@@ -706,6 +724,14 @@ export class VideoEdit {
     if (values.latencyMode !== undefined) this.live.latencyMode = values.latencyMode
     if (values.saveReplay !== undefined) this.live.saveReplay = values.saveReplay
 
+    if (values.dvrWindowMinutes !== undefined) {
+      this.live.dvrWindow = this.dvrWindowMinutesToSeconds(values.dvrWindowMinutes)
+    }
+
+    if (values.dvrEnabled !== undefined && values.dvrEnabled === false) {
+      this.live.dvrWindow = 0
+    }
+
     if (values.replayPrivacy !== undefined) {
       this.live.replaySettings = values.replayPrivacy
         ? { privacy: values.replayPrivacy }
@@ -730,6 +756,10 @@ export class VideoEdit {
       liveStreamKey: this.metadata.live.streamKey,
       permanentLive: this.live.permanentLive,
       latencyMode: this.live.latencyMode,
+
+      dvrEnabled: this.live.dvrWindow > 0,
+      dvrWindowMinutes: this.dvrWindowToMinutes(this.live.dvrWindow),
+
       saveReplay: this.live.saveReplay,
 
       replayPrivacy: this.live.replaySettings
@@ -750,7 +780,7 @@ export class VideoEdit {
         ? this.live.replaySettings
         : undefined,
       latencyMode: this.live.latencyMode,
-
+      dvrWindow: this.live.dvrWindow,
       schedules: this.live.schedules
     }
   }
@@ -761,6 +791,7 @@ export class VideoEdit {
 
       permanentLive: this.live.permanentLive,
       latencyMode: this.live.latencyMode,
+      dvrWindow: this.live.dvrWindow,
       saveReplay: this.live.saveReplay,
       replaySettings: this.live.replaySettings,
       schedules: this.live.schedules
@@ -1115,6 +1146,7 @@ export class VideoEdit {
       isLive: this.metadata.isLive,
       aspectRatio: this.metadata.aspectRatio,
       views: this.metadata.views,
+      downloads: this.metadata.downloads,
       likes: this.metadata.likes,
       duration: this.metadata.duration,
       blacklisted: this.metadata.blacklisted,
@@ -1125,6 +1157,14 @@ export class VideoEdit {
 
       live: this.metadata.live
     }
+  }
+
+  private dvrWindowToMinutes (seconds: number) {
+    return Math.round(seconds / 60)
+  }
+
+  private dvrWindowMinutesToSeconds (minutes: number) {
+    return minutes * 60
   }
 
   // ---------------------------------------------------------------------------
